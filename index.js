@@ -18,7 +18,7 @@ const { makeExecutableSchema } = require("@graphql-tools/schema");
       viewMessages: [Message!]
     }
     type Mutation {
-      sendMessage(name: String, content: String): Message!
+      sendMessage(params: DataInput): Message!
     }
     type Subscription {
       receiveMessage: Message!
@@ -28,8 +28,12 @@ const { makeExecutableSchema } = require("@graphql-tools/schema");
         name: String!
         content: String
     }
+    input DataInput {
+      name: String 
+      content: String
+    }
   `;
-
+  
   let messages = []
   const resolvers = {
     Query: {
@@ -38,13 +42,9 @@ const { makeExecutableSchema } = require("@graphql-tools/schema");
       },
     },
     Mutation: {
-      sendMessage: (parent, { name, content }) => {
-        const id = messages.length;
-        var new_message = {
-            id,
-            name,
-            content
-        }
+      sendMessage: (parent, { params }) => {
+        params.id = messages.length;
+        var new_message = params;
         messages.push(new_message);
         pubsub.publish("MessageService", {receiveMessage: new_message});
         return new_message;
